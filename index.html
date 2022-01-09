@@ -1,150 +1,139 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="style.css" />
-    <script src="script.js" defer></script>
-    <script
-      src="https://kit.fontawesome.com/4da7e8e6be.js"
-      crossorigin="anonymous"
-    ></script>
-    <title>Movies</title>
-  </head>
-  <body>
-    <div class="main-container">
-      <!-- navbar -->
-      <div class="nav-container">
-        <nav class="navbar">
-          <div class="sort">
-            sort by:
-            <select class="sort-select">
-              <option value="top">top rated</option>
-              <option value="top">option 2</option>
-            </select>
-          </div>
-          <div class="header-and-search">
-            <h1 class="header">Movies</h1>
-            <div class="search">
-              <form class="search-form">
-                <input
-                  type="text"
-                  class="search-input"
-                  placeholder="Search..."
-                />
-                <!-- <button class="search-btn">search</button> -->
-              </form>
-            </div>
-          </div>
-          <div class="profile">
-            <img src="img/alucard.jpg" alt="" class="avatar" />
-            <p class="profile-name">◈ Andrew ◈</p>
-          </div>
-        </nav>
-      </div>
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="stylesheet" href="./style.css" />
+		<script src="./script.js" defer></script>
+		<script
+			src="https://kit.fontawesome.com/4da7e8e6be.js"
+			crossorigin="anonymous"
+		></script>
+		<title>Movies Project</title>
+	</head>
+	<body>
+		<div class="main-container">
+			<!-- navbar -->
+			<div class="nav-container">
+				<nav class="navbar">
+					<div class="sort">
+						sort by:
+						<select class="sort-select">
+							<option value="top">top rated</option>
+							<option value="top">option 2</option>
+						</select>
+					</div>
+					<div class="header-and-search">
+						<h1 class="header">Movies</h1>
+						<div class="search">
+							<form class="search-form">
+								<input
+									type="text"
+									class="search-input"
+									placeholder="Search..."
+								/>
+								<!-- <button class="search-btn">search</button> -->
+							</form>
+						</div>
+					</div>
+					<div class="profile">
+						<img src="img/alucard.jpg" alt="" class="avatar" />
+						<p class="profile-name">◈ Andrew ◈</p>
+					</div>
+				</nav>
+			</div>
 
-      <!-- main-section -->
-      <div class="main">
-        <!-- filters -->
-        <div class="filters-container">
-          <h2 class="filters-header">Filters</h2>
-          <ul class="filters-list">
-            <p class="filter-name">Genres</p>
-            <li class="filter">
-              <input type="checkbox" />
-              <label for="filter">Action</label>
-            </li>
-            <li class="filter">
-              <input type="checkbox" />
-              <label for="filter">Drama</label>
-            </li>
-            <li class="filter">
-              <input type="checkbox" />
-              <label for="fitler">Horror</label>
-            </li>
-            <li class="filter">
-              <input type="checkbox" />
-              <label for="filter">Comedy</label>
-            </li>
+			<!-- main-section -->
+			<div class="main">
+				<!-- filters -->
+				<div class="filters-container">
+					<h2 class="filters-header">Filters</h2>
+					<ul class="filters-list">
+						<p class="filter-name">Genres</p>
+						<li class="filter">
+							<input type="checkbox" />
+							<label for="filter">Action</label>
+						</li>
+						<li class="filter">
+							<input type="checkbox" />
+							<label for="filter">Drama</label>
+						</li>
+						<li class="filter">
+							<input type="checkbox" />
+							<label for="fitler">Horror</label>
+						</li>
+						<li class="filter">
+							<input type="checkbox" />
+							<label for="filter">Comedy</label>
+						</li>
 
-            <p class="filter-name">Release year</p>
-            <li class="filter">
-              <input type="checkbox" />
-              <label for="filter">2002</label>
-              <input type="checkbox" />
-              <label for="filter">2009</label>
-            </li>
-            <li class="filter">
-              <input type="checkbox" />
-              <label for="filter">2003</label>
-              <input type="checkbox" />
-              <label for="filter">2010</label>
-            </li>
-            <li class="filter">
-              <input type="checkbox" />
-              <label for="fitler">2004</label>
-              <input type="checkbox" />
-              <label for="filter">2011</label>
-            </li>
-            <li class="filter">
-              <input type="checkbox" />
-              <label for="filter">2005</label>
-              <input type="checkbox" />
-              <label for="filter">2012</label>
-            </li>
-            <li class="filter">
-              <input type="checkbox" />
-              <label for="filter">2006</label>
-              <input type="checkbox" />
-              <label for="filter">2013</label>
-            </li>
-            <li class="filter">
-              <input type="checkbox" />
-              <label for="filter">2007</label>
-              <input type="checkbox" />
-              <label for="filter">2014</label>
-            </li>
-            <li class="filter">
-              <input type="checkbox" />
-              <label for="filter">2008</label>
-              <input type="checkbox" />
-              <label for="filter">2015</label>
-            </li>
-          </ul>
-        </div>
+						<p class="filter-name">Release year</p>
+						<li class="filter">
+							<input type="checkbox" />
+							<label for="filter">2002</label>
+							<input type="checkbox" />
+							<label for="filter">2009</label>
+						</li>
+						<li class="filter">
+							<input type="checkbox" />
+							<label for="filter">2003</label>
+							<input type="checkbox" />
+							<label for="filter">2010</label>
+						</li>
+						<li class="filter">
+							<input type="checkbox" />
+							<label for="fitler">2004</label>
+							<input type="checkbox" />
+							<label for="filter">2011</label>
+						</li>
+						<li class="filter">
+							<input type="checkbox" />
+							<label for="filter">2005</label>
+							<input type="checkbox" />
+							<label for="filter">2012</label>
+						</li>
+						<li class="filter">
+							<input type="checkbox" />
+							<label for="filter">2006</label>
+							<input type="checkbox" />
+							<label for="filter">2013</label>
+						</li>
+						<li class="filter">
+							<input type="checkbox" />
+							<label for="filter">2007</label>
+							<input type="checkbox" />
+							<label for="filter">2014</label>
+						</li>
+						<li class="filter">
+							<input type="checkbox" />
+							<label for="filter">2008</label>
+							<input type="checkbox" />
+							<label for="filter">2015</label>
+						</li>
+					</ul>
+				</div>
 
-        <!-- movies-list -->
-        <div class="movies-container">
-          <div class="movies-list">
-            <!-- <div class="movie-card">
-              <img
-                src="img/1613108527_maxresdefault-51.jpg"
-                alt=""
-                class="movie-image"
-              />
-              <div class="description">
-                <p class="film-name">Spider-man</p>
-                <p class="genre">Action</p>
-                <small class="release-year">2002</small>
-              </div>
-            </div> -->
-          </div>
+				<!-- movies-list -->
+				<div class="movies-container">
+					<div class="movies-list"></div>
 
-          <!-- pagination -->
-          <div class="pagination">
-            <button class="btn btn-prev disabled">
-              <i class="fas fa-arrow-left"></i>
-            </button>
-            <button class="page page-1 disabled">1</button>
-            <button class="page page-2">2</button>
-            <button class="page page-3">3</button>
-            <button class="btn btn-next">
-              <i class="fas fa-arrow-right"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </body>
+					<!-- pagination -->
+					<div class="pagination">
+						<button class="btn btn-prev disabled">
+							<i class="fas fa-arrow-left"></i>
+						</button>
+						<button class="page page-1 disabled">1</button>
+						<button class="page page-2">2</button>
+						<button class="page page-3">3</button>
+						<button class="btn btn-next">
+							<i class="fas fa-arrow-right"></i>
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+	</body>
 </html>
