@@ -17,14 +17,14 @@ const getGenres = async (data, i) => {
 };
 */
 
-const loadMoviesOnView = async data => {
-	try {
-		const genres = await axios.get(
-			`${API}/genre/movie/list?api_key=${API_KEY}`
-		);
+const loadMoviesOnView = async (data) => {
+  try {
+    const genres = await axios.get(
+      `${API}/genre/movie/list?api_key=${API_KEY}`
+    );
 
-		for (let i = 0; i < 20; i++) {
-			const markup = `<div class="movie-card">
+    for (let i = 0; i < 20; i++) {
+      const markup = `<div class="movie-card">
         <img
           src="${IMAGE_BASE_URL}${data.results[i].poster_path}"
           alt="poster"
@@ -33,43 +33,46 @@ const loadMoviesOnView = async data => {
         <div class="description">
           <p class="film-name">${data.results[i].title}</p>
           <p class="genre">${
-						genres.data.genres.find(
-							genre => genre.id === data.results[i].genre_ids[0]
-						).name
-					}</p>
+            genres.data.genres.find(
+              (genre) => genre.id === data.results[i].genre_ids[0]
+            ).name
+          }</p>
           <small class="release-year">${data.results[i].release_date.slice(
-						0,
-						4
-					)}</small>
+            0,
+            4
+          )}</small>
         </div>
       </div>`;
 
-			moviesContainer.insertAdjacentHTML('beforeend', markup);
-		}
-	} catch (err) {}
+      moviesContainer.insertAdjacentHTML('beforeend', markup);
+    }
+  } catch (err) {}
 };
 
 const getMoviesDataAndLoad = async (page = 1) => {
-	try {
-		const movies = await axios.get(
-			`${API}/movie/top_rated?api_key=${API_KEY}&page=${+page}`
-		);
-		loadMoviesOnView(movies.data);
-	} catch (error) {}
+  try {
+    const movies = await axios.get(
+      `${API}/movie/top_rated?api_key=${API_KEY}&page=${+page}`
+    );
+    loadMoviesOnView(movies.data);
+    return movies.data;
+  } catch (error) {}
 };
 
 getMoviesDataAndLoad();
 
-paginationContainer.addEventListener('click', e => {
-	if (e.target.classList.contains('page')) {
-		// e.preventDefault();
-		moviesContainer.innerHTML = '';
-		let curPage = 1;
-		document.querySelector(`.page-${curPage}`).classList.toggle('disabled');
-		curPage = e.target.className[10];
-		e.target.classList.toggle('disabled');
-		getMoviesDataAndLoad(curPage);
-	}
+paginationContainer.addEventListener('click', (e) => {
+  if (e.target.classList.contains('page')) {
+    // e.preventDefault();
+    moviesContainer.innerHTML = '';
+    let curPage = 1;
+    document
+      .querySelectorAll(`.page`)
+      .forEach((p) => p.classList.remove('disabled'));
+    curPage = e.target.className[10];
+    e.target.classList.toggle('disabled');
+    getMoviesDataAndLoad(curPage);
+  }
 });
 
 /*
