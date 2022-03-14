@@ -1,292 +1,295 @@
-const IMAGE_BASE_URL = 'http://image.tmdb.org/t/p/w500';
-const API = 'https://api.themoviedb.org/3';
+const movieWrapper = document.querySelector('.body-movie-content-wrapper');
+const paginationContainer = document.querySelector('.pagination-container');
+const searchInput = document.querySelector('.header-seacrh-input');
+const movieContentList = document.querySelector('.movie-content-list');
+const movieDetails = document.querySelector('.movie-details');
+const detailsContainer = document.querySelector('.details-container');
+const selectMoviesTypeContainer = document.querySelector('.select-movie-rates');
+const filterGenreBody = document.querySelector('.filter-genre-body');
+const searchBtn = document.querySelector('.search-btn');
+const selectMoviesType = document.querySelector('.select-movie-rates');
+const applyFilterBtn = document.querySelector('.apply-genres-btn');
+const detailBackBtn = document.querySelector('.detail-back-button');
+
+const API_URL = 'https://api.themoviedb.org/3';
 const API_KEY = 'e1036725d4b220e51c48c798d13bcf37';
+const IMAGE_BASE_URL = 'http://image.tmdb.org/t/p/w500';
 
-const searchForm = document.querySelector('.search-form');
-const searchInput = document.querySelector('.search-input');
-const moviesContainer = document.querySelector('.movies-list');
-const searchBTN = document.querySelector('.search-btn');
-const pageNumbersWrapper = document.querySelector('.page-numbers-wrapper');
-const btnPrev = document.querySelector('.btn-prev');
-const filterContainer = document.querySelector('.filters-list');
-const allFilterInputs = document.querySelectorAll('.filter-input');
-
-let curPage = 1;
-let pageIndex = 0;
-let paginationNumbersArray = [];
+let currentPage = 1;
 let genres = [];
-let pages = [];
-let searchQuery;
-let checkSearch;
-let totalPages;
-let filterVar;
-let filteredMovies = [];
-let clickedCheckbox;
-let multipleFilters;
+let paginationNumberArr = [];
+let pageIndex = 0;
+let currentRequestType = 'top_rated';
 
-const uncheckAllInputs = () => {
-  [...allFilterInputs].forEach((inp) => (inp.checked = false));
+const pages = [];
+const moviesType = [
+	{ value: 'top_rated', title: 'Top Rated' },
+	{ value: 'popular', title: 'Popular' },
+	{ value: 'upcoming', title: 'Upcoming' },
+];
+const genresToSend = [];
+
+const getMoviesOnCondition = async (requestType, page, action) => {
+	let url = '';
+
+	currentRequestType = requestType;
+
+	const isRequestTypeIncluded = moviesType.some(
+		movieType => movieType.value === requestType
+	);
+
+	if (isRequestTypeIncluded) {
+		url = `${API_URL}/movie/${requestType}?api_key=${API_KEY}&page=${page}`;
+	} else if (requestType === 'search' && !searchInput.value) {
+		url = `${API_URL}/movie/top_rated?api_key=${API_KEY}&page=${page}`;
+	} else if (requestType === 'genresFiltered') {
+		url = `${API_URL}/discover/movie?api_key=${API_KEY}&page=${page}&with_genres=${genresToSend}`;
+	} else {
+		url = `${API_URL}/search/movie?api_key=${API_KEY}&query=${searchInput.value}&page=${page}`;
+	}
+
+	try {
+		const moviesData = await axios.get(url);
+
+		const movies = moviesData.data.results.map(movie => {
+			const genresName = movie.genre_ids.map(genreId => {
+				return genres.filter(genre => genre.id === genreId)[0].name;
+			});
+
+			return {
+				image: IMAGE_BASE_URL + movie.poster_path,
+				title: movie.title,
+				year: movie.release_date,
+				genre: genresName,
+				movieId: movie.id,
+			};
+		});
+
+		renderPages(moviesData.data.total_pages, action);
+		renderMovie(movies);
+	} catch (err) {}
 };
 
-const renderMoviesOnView = (movies, genres, multipleFilt = false) => {
-  if (multipleFilt === false) {
-    moviesContainer.innerHTML = '';
-  }
+const getMovieById = async movieId => {
+	try {
+		const movieByIdData = await axios.get(
+			`${API_URL}/movie/${movieId}?api_key=${API_KEY}`
+		);
 
-  for (let i = 0; i < movies.length; i++) {
-    const foundGenres = genres.data.genres.find(
-      (genre) => genre.id === movies[i].genre_ids[0]
-    ).name;
-    // console.log(foundGenres);
+		const genresName = movieByIdData.data.genres.map(genre => genre.name);
 
-    const formatReleaseYear = movies[i].release_date.slice(0, 4);
+		const movieObjById = {
+			image: IMAGE_BASE_URL + movieByIdData.data.poster_path,
+			title: movieByIdData.data.title,
+			year: movieByIdData.data.release_date,
+			genre: genresName,
+			overview: movieByIdData.data.overview,
+			voteAverage: movieByIdData.data.vote_average,
+		};
 
-    const markup = `
-    <div class="movie-card">
-        <img
-          src="${IMAGE_BASE_URL}${movies[i].poster_path}"
-          alt="poster"
-          class="movie-image"
-        />
-        <div class="description">
-          <p class="film-name">${movies[i].title}</p>
-          <p class="genre">${foundGenres}</p>
-          <small class="release-year">${formatReleaseYear}</small>
-        </div>
-      </div>`;
+		renderDetailsPage(movieObjById);
+	} catch (err) {}
+};
 
-    moviesContainer.innerHTML += markup;
-  }
+const getGenres = async () => {
+	try {
+		const genresData = await axios.get(
+			`${API_URL}/genre/movie/list?api_key=${API_KEY}`
+		);
+		genres = genresData.data.genres;
+
+		renderGenres();
+	} catch (err) {}
+};
+
+const pageHanlder = (action, event) => {
+	const page = parseInt(event.target.getAttribute('data-page-i'));
+
+	if (action === 'pageClick') {
+		currentPage = page;
+	}
+
+	getMoviesOnCondition(currentRequestType, currentPage, action);
+};
+
+const onMovieClick = event => {
+	movieContentList.style.display = 'none';
+	movieDetails.style.display = 'flex';
+
+	const movieId = event.target.parentElement.getAttribute('data-movie-id');
+
+	getMovieById(movieId);
+};
+
+const onBack = () => {
+	movieDetails.style.display = 'none';
+	movieContentList.style.display = 'flex';
+};
+
+const onSearch = () => {
+	currentPage = 1;
+	getMoviesOnCondition('search', currentPage, 'searchMovie');
+};
+
+const onSelectMoviesType = async event => {
+	currentPage = 1;
+	getMoviesOnCondition(event.target.value, currentPage, 'selectMoviesType');
+};
+
+const onChooseGenre = event => {
+	const genreId = event.target.getAttribute('data-genre-id');
+
+	if (genresToSend.length === 0) {
+		genresToSend.push(genreId);
+	} else {
+		const isGenresIdIncluded = genresToSend.some(genre => genre === genreId);
+		const genreIndex = genresToSend.indexOf(genreId);
+
+		if (isGenresIdIncluded) {
+			genresToSend.splice(genreIndex, 1);
+		} else {
+			genresToSend.push(genreId);
+		}
+	}
+};
+
+const onApplyFilter = () => {
+	currentPage = 1;
+	getMoviesOnCondition('genresFiltered', currentPage, 'applyGenresFilter');
+};
+
+const renderMovie = movies => {
+	movieWrapper.innerHTML = '';
+
+	movies.forEach(movie => {
+		// NEW !!!
+		movieWrapper.innerHTML += `<div data-movie-id="${movie.movieId}" class="movie-card">
+			<img src="${movie.image}" class="movie-logo-img" />
+			<div class="movie-details-info">
+					<p class="movie-title">${movie.title}</p>
+					<p class="movie-year">${movie.year}</p>
+					<p class="movie-genre">${movie.genre}</p>
+			</div>
+		</div>`;
+	});
+
+	// NEW !!!
+	document.querySelectorAll('.movie-card').forEach(mc => {
+		mc.addEventListener('click', onMovieClick, false);
+	});
+};
+
+const renderDetailsPage = movieById => {
+	detailsContainer.innerHTML = '';
+
+	detailsContainer.innerHTML += `	<div class="movie-vote-average-container">
+    <img
+      class="movie-img"
+      src="${movieById.image}"
+    />
+    <div class="vote-average-container">
+    <p class="vote-average-header">Vote Average:</p>
+      <p class="vote-average-sign">${movieById.voteAverage}</p>
+    </div>
+  </div>
+  <div class="movie-details-sign-container">
+    <div class="title-details">
+      <p class="movie-details-sign">Title:</p>
+      <p class="detail-info-sign detail-title">${movieById.title}</p>
+    </div>
+    <div>
+      <p class="movie-details-sign">Year:</p>
+      <p class="detail-info-sign">${movieById.year}</p>
+    </div>
+    <div>
+      <p class="movie-details-sign">Genre:</p>
+      <p class="detail-info-sign">${movieById.genre}</p>
+    </div>
+    <div>
+      <p class="movie-details-sign">Overview:</p>
+      <p class="detail-overview">${movieById.overview}</p>
+    </div>
+  </div>`;
+};
+
+const renderGenres = () => {
+	genres.forEach(genre => {
+		filterGenreBody.innerHTML += `<div class="body-filter-body">	
+		<input type="checkbox" data-genre-id="${genre.id}" class="filtered-checkboxes" />
+		<p class="body-filter-movie-type">${genre.name}</p>
+	</div>`;
+	});
+
+	// NEW !!!
+	document.querySelectorAll('.filtered-checkboxes').forEach(fc => {
+		fc.addEventListener('click', onChooseGenre, false);
+	});
+};
+
+const renderMoviesTypes = () => {
+	moviesType.forEach(movieType => {
+		selectMoviesTypeContainer.innerHTML += `<option class="filter-optoin" value="${movieType.value}">
+		${movieType.title}
+	</option>`;
+	});
 };
 
 const renderPages = (totalPages, action) => {
-  pageNumbersWrapper.innerHTML = '';
+	paginationContainer.innerHTML = '';
 
-  for (let i = 1; i <= totalPages; i++) {
-    pages.push(i);
-  }
+	for (let i = 1; i <= totalPages; i++) {
+		pages.push(i);
+	}
 
-  if (paginationNumbersArray[paginationNumbersArray.length - 1] === curPage) {
-    pageIndex = curPage - 1;
-  }
+	if (action === 'searchMovie' || action === 'selectMoviesType') {
+		pageIndex = 0;
+	}
 
-  if (curPage === 1) {
-    btnPrev.classList.add('disabled');
-  }
+	if (currentPage === paginationNumberArr[paginationNumberArr.length - 1]) {
+		pageIndex = currentPage - 1;
+	}
 
-  if (
-    paginationNumbersArray[0] === curPage &&
-    paginationNumbersArray[0] !== 1
-  ) {
-    pageIndex = curPage - 5;
-  }
-  if (
-    !paginationNumbersArray.includes(curPage) &&
-    (action === 'prevPage' || action === 'pageClick')
-  ) {
-    if (curPage === 4) {
-      pageIndex = 0;
-    } else {
-      pageIndex = curPage - 5;
-    }
-  }
-  if (
-    !paginationNumbersArray.includes(curPage) &&
-    action === 'nextPage' &&
-    curPage !== totalPages - 4
-  ) {
-    pageIndex = curPage + 5;
-  }
+	if (
+		paginationNumberArr[0] === currentPage &&
+		currentPage !== 1 &&
+		action === 'pageClick'
+	) {
+		if (currentPage === 4) {
+			pageIndex = 0;
+		} else {
+			pageIndex = currentPage - 5;
+		}
+	}
 
-  paginationNumbersArray = pages.slice(pageIndex, pageIndex + 5);
+	paginationNumberArr = pages.slice(pageIndex, pageIndex + 5);
 
-  for (let i = 0; i < paginationNumbersArray.length; i++) {
-    const markup = `
-      <button data-page="${paginationNumbersArray[i]}" class="page ${
-      paginationNumbersArray[i] === curPage ? 'disabled' : ''
-    }">${paginationNumbersArray[i]}</button>
-    `;
+	for (let i = 0; i < paginationNumberArr.length; i++) {
+		const markup = `<button data-page-i="${
+			paginationNumberArr[i]
+		}" class="pagination ${
+			currentPage === paginationNumberArr[i] ? 'active' : ''
+		}">${paginationNumberArr[i]}</button>`;
+		paginationContainer.innerHTML += markup;
+	}
 
-    pageNumbersWrapper.innerHTML += markup;
-  }
+	// NEW !!!
+	document.querySelectorAll('.pagination').forEach(p => {
+		p.addEventListener(
+			'click',
+			event => {
+				pageHanlder('pageClick', event);
+			},
+			false
+		);
+	});
 };
 
-const getGenres = async (
-  search = false,
-  value,
-  filter = false,
-  filterQuery
-) => {
-  try {
-    const genresData = await axios.get(
-      `${API}/genre/movie/list?api_key=${API_KEY}`
-    );
+renderMoviesTypes();
+getGenres();
+getMoviesOnCondition('top_rated', currentPage, 'getMovies');
 
-    genres = genresData;
-    if (search === true) {
-      getMoviesDataAndLoad(value, 1, genres, 'getGenres', true, value);
-    } else if (search === false) {
-      if (filter === false) {
-        getMoviesDataAndLoad('', 1, genres, 'getGenres', false);
-      } else if (filter === true) {
-        getMoviesDataAndLoad(
-          '',
-          curPage,
-          genres,
-          'getGenres',
-          false,
-          true,
-          filterQuery
-        );
-      }
-    }
-  } catch (err) {}
-};
-
-const getMoviesDataAndLoad = async (
-  value,
-  page,
-  genres,
-  action,
-  search,
-  filterCheck = false,
-  filter = ''
-) => {
-  try {
-    if (search) {
-      const movies1 = await axios.get(
-        `${API}/search/movie?api_key=${API_KEY}&query=${value}&page=${page}`
-      );
-      checkSearch = true;
-      totalPages = movies1.data.total_pages;
-      console.log(movies1.data);
-      renderPages(movies1.data.total_pages, action);
-      renderMoviesOnView(movies1.data.results, genres);
-    } else if (!search) {
-      const movies2 = await axios.get(
-        `${API}/movie/top_rated?api_key=${API_KEY}&page=${page}`
-      );
-      checkSearch = false;
-      totalPages = movies2.data.total_pages;
-      if (filterCheck === true && clickedCheckbox.checked) {
-        const filtered = movies2.data.results.filter(
-          (mov) =>
-            filter ===
-            genres.data.genres
-              .find((genre) => genre.id === mov.genre_ids[0])
-              .name.toLowerCase()
-        );
-
-        renderPages(movies2.data.total_pages, action);
-        if ((multipleFilters = true)) {
-          renderMoviesOnView(filtered, genres, true);
-          return;
-        }
-        renderMoviesOnView(filtered, genres);
-        return;
-      }
-
-      moviesContainer.innerHTML = '';
-      renderPages(movies2.data.total_pages, action);
-      renderMoviesOnView(movies2.data.results, genres);
-    }
-    console.log(movies.data);
-  } catch (error) {}
-};
-
-const onPageClick = (e) => {
-  e.preventDefault();
-  uncheckAllInputs();
-  if (clickedCheckbox && clickedCheckbox.checked) {
-    clickedCheckbox.checked = false;
-  }
-  if (e.target.classList.contains('page')) {
-    moviesContainer.innerHTML = '';
-    document
-      .querySelectorAll('.page')
-      .forEach((p) => p.classList.remove('disabled'));
-    curPage = parseInt(e.target.getAttribute('data-page'));
-    e.target.classList.toggle('disabled');
-    if (checkSearch) {
-      getMoviesDataAndLoad(searchQuery, curPage, genres, 'pageClick', true);
-    } else {
-      getMoviesDataAndLoad('', curPage, genres, 'pageClick');
-    }
-  }
-};
-
-const onPreviousPage = () => {
-  uncheckAllInputs();
-  curPage = curPage - 1;
-  getMoviesDataAndLoad('', curPage, genres, 'prevPage');
-};
-
-const onNextPage = () => {
-  uncheckAllInputs();
-  curPage = curPage + 1;
-  getMoviesDataAndLoad('', curPage, genres, 'nextPage');
-};
-
-getGenres(false);
-
-const search = (event) => {
-  event.preventDefault();
-  const inputVal = searchInput.value;
-  searchQuery = searchInput.value;
-  getGenres(true, inputVal);
-  curPage = 1;
-  searchInput.value = '';
-  searchInput.blur();
-};
-
-// searchForm.addEventListener('submit', (e) => {
-//   e.preventDefault();
-//   const inputVal = searchInput.value;
-//   searchQuery = searchInput.value;
-//   getGenres(true, inputVal);
-//   curPage = 1;
-//   searchInput.value = '';
-//   searchInput.blur();
-// });
-
-const filter = (event) => {
-  const allFilterInputsArr = [...allFilterInputs];
-  const filteredArr = allFilterInputsArr.filter(
-    (input) => input !== event.target
-  );
-
-  if (!event.target.checked && filteredArr.some((inp) => inp.checked)) {
-    const checkedFilterArr = filteredArr.filter((inp) => inp.checked);
-    moviesContainer.innerHTML = '';
-    if (checkedFilterArr.length > 1) {
-      checkedFilterArr.forEach((filt) => {
-        multipleFilters = true;
-        filterVar = filt.getAttribute('data-genre-name');
-        getGenres(false, '', true, filterVar);
-      });
-    } else if (checkedFilterArr.length === 1) {
-      multipleFilters = false;
-      filterVar = checkedFilterArr[0].getAttribute('data-genre-name');
-      getGenres(false, '', true, filterVar);
-    }
-    return;
-  }
-
-  if (
-    event.target.hasAttribute('data-genre-name') &&
-    filteredArr.some((inp) => inp.checked)
-  ) {
-    multipleFilters = true;
-    filterVar = event.target.getAttribute('data-genre-name');
-    getGenres(false, '', true, filterVar);
-    clickedCheckbox = event.target;
-    return;
-  }
-
-  if (event.target.hasAttribute('data-genre-name')) {
-    moviesContainer.innerHTML = '';
-    filterVar = event.target.getAttribute('data-genre-name');
-    getGenres(false, '', true, filterVar);
-    clickedCheckbox = event.target;
-  }
-};
+// NEW !!!
+searchBtn.addEventListener('click', onSearch, false);
+selectMoviesType.addEventListener('change', onSelectMoviesType, false);
+applyFilterBtn.addEventListener('click', onApplyFilter, false);
+detailBackBtn.addEventListener('click', onBack, false);
