@@ -7,31 +7,49 @@ const searchInput = document.querySelector('.search-input');
 const moviesContainer = document.querySelector('.movies-list');
 const searchBTN = document.querySelector('.search-btn');
 const pageNumbersWrapper = document.querySelector('.page-numbers-wrapper');
+const btnPrev = document.querySelector('.btn-prev');
+const filterContainer = document.querySelector('.filters-list');
+const allFilterInputs = document.querySelectorAll('.filter-input');
 
 let curPage = 1;
 let pageIndex = 0;
 let paginationNumbersArray = [];
 let genres = [];
 let pages = [];
+let searchQuery;
+let checkSearch;
+let totalPages;
+let filterVar;
+let filteredMovies = [];
+let clickedCheckbox;
+let multipleFilters;
 
-const renderMoviesOnView = (movies, genres) => {
-  moviesContainer.innerHTML = '';
+const uncheckAllInputs = () => {
+  [...allFilterInputs].forEach((inp) => (inp.checked = false));
+};
 
-  for (let i = 0; i < 20; i++) {
+const renderMoviesOnView = (movies, genres, multipleFilt = false) => {
+  if (multipleFilt === false) {
+    moviesContainer.innerHTML = '';
+  }
+
+  for (let i = 0; i < movies.length; i++) {
     const foundGenres = genres.data.genres.find(
-      (genre) => genre.id === movies.results[i].genre_ids[0]
+      (genre) => genre.id === movies[i].genre_ids[0]
     ).name;
-    console.log(foundGenres);
-    const formatReleaseYear = movies.results[i].release_date.slice(0, 4);
+    // console.log(foundGenres);
 
-    const markup = `<div class="movie-card">
+    const formatReleaseYear = movies[i].release_date.slice(0, 4);
+
+    const markup = `
+    <div class="movie-card">
         <img
-          src="${IMAGE_BASE_URL}${movies.results[i].poster_path}"
+          src="${IMAGE_BASE_URL}${movies[i].poster_path}"
           alt="poster"
           class="movie-image"
         />
         <div class="description">
-          <p class="film-name">${movies.results[i].title}</p>
+          <p class="film-name">${movies[i].title}</p>
           <p class="genre">${foundGenres}</p>
           <small class="release-year">${formatReleaseYear}</small>
         </div>
@@ -50,6 +68,10 @@ const renderPages = (totalPages, action) => {
 
   if (paginationNumbersArray[paginationNumbersArray.length - 1] === curPage) {
     pageIndex = curPage - 1;
+  }
+
+  if (curPage === 1) {
+    btnPrev.classList.add('disabled');
   }
 
   if (
@@ -89,29 +111,95 @@ const renderPages = (totalPages, action) => {
   }
 };
 
-const getGenres = async () => {
+const getGenres = async (
+  search = false,
+  value,
+  filter = false,
+  filterQuery
+) => {
   try {
     const genresData = await axios.get(
       `${API}/genre/movie/list?api_key=${API_KEY}`
     );
 
     genres = genresData;
-    getMoviesDataAndLoad(1, genres, 'getGenres');
+    if (search === true) {
+      getMoviesDataAndLoad(value, 1, genres, 'getGenres', true, value);
+    } else if (search === false) {
+      if (filter === false) {
+        getMoviesDataAndLoad('', 1, genres, 'getGenres', false);
+      } else if (filter === true) {
+        getMoviesDataAndLoad(
+          '',
+          curPage,
+          genres,
+          'getGenres',
+          false,
+          true,
+          filterQuery
+        );
+      }
+    }
   } catch (err) {}
 };
 
-const getMoviesDataAndLoad = async (page, genres, action) => {
+const getMoviesDataAndLoad = async (
+  value,
+  page,
+  genres,
+  action,
+  search,
+  filterCheck = false,
+  filter = ''
+) => {
   try {
-    const movies = await axios.get(
-      `${API}/movie/top_rated?api_key=${API_KEY}&page=${page}`
-    );
+    if (search) {
+      const movies1 = await axios.get(
+        `${API}/search/movie?api_key=${API_KEY}&query=${value}&page=${page}`
+      );
+      checkSearch = true;
+      totalPages = movies1.data.total_pages;
+      console.log(movies1.data);
+      renderPages(movies1.data.total_pages, action);
+      renderMoviesOnView(movies1.data.results, genres);
+    } else if (!search) {
+      const movies2 = await axios.get(
+        `${API}/movie/top_rated?api_key=${API_KEY}&page=${page}`
+      );
+      checkSearch = false;
+      totalPages = movies2.data.total_pages;
+      if (filterCheck === true && clickedCheckbox.checked) {
+        const filtered = movies2.data.results.filter(
+          (mov) =>
+            filter ===
+            genres.data.genres
+              .find((genre) => genre.id === mov.genre_ids[0])
+              .name.toLowerCase()
+        );
 
-    renderPages(movies.data.total_pages, action);
-    renderMoviesOnView(movies.data, genres);
+        renderPages(movies2.data.total_pages, action);
+        if ((multipleFilters = true)) {
+          renderMoviesOnView(filtered, genres, true);
+          return;
+        }
+        renderMoviesOnView(filtered, genres);
+        return;
+      }
+
+      moviesContainer.innerHTML = '';
+      renderPages(movies2.data.total_pages, action);
+      renderMoviesOnView(movies2.data.results, genres);
+    }
+    console.log(movies.data);
   } catch (error) {}
 };
 
 const onPageClick = (e) => {
+  e.preventDefault();
+  uncheckAllInputs();
+  if (clickedCheckbox && clickedCheckbox.checked) {
+    clickedCheckbox.checked = false;
+  }
   if (e.target.classList.contains('page')) {
     moviesContainer.innerHTML = '';
     document
@@ -119,62 +207,86 @@ const onPageClick = (e) => {
       .forEach((p) => p.classList.remove('disabled'));
     curPage = parseInt(e.target.getAttribute('data-page'));
     e.target.classList.toggle('disabled');
-    getMoviesDataAndLoad(curPage, genres, 'pageClick');
+    if (checkSearch) {
+      getMoviesDataAndLoad(searchQuery, curPage, genres, 'pageClick', true);
+    } else {
+      getMoviesDataAndLoad('', curPage, genres, 'pageClick');
+    }
   }
 };
 
 const onPreviousPage = () => {
+  uncheckAllInputs();
   curPage = curPage - 1;
-  getMoviesDataAndLoad(curPage, genres, 'prevPage');
+  getMoviesDataAndLoad('', curPage, genres, 'prevPage');
 };
 
 const onNextPage = () => {
+  uncheckAllInputs();
   curPage = curPage + 1;
-  getMoviesDataAndLoad(curPage, genres, 'nextPage');
+  getMoviesDataAndLoad('', curPage, genres, 'nextPage');
 };
 
-getGenres();
+getGenres(false);
 
-/*
-const searchFunctional = async () => {
-  moviesContainer.innerHTML = '';
-  const data = await fetch(
-    `${API}/search/movie?api_key=${API_KEY}&query=${searchInput.value}`
-  )
-    .then((res) => res.json())
-    .then((data) => data.results);
-
-  const genres = await fetch(`${API}/genre/movie/list?api_key=${API_KEY}`)
-    .then((res) => res.json())
-    .then((data) => data.genres);
-
-  data.forEach((film) => {
-    const markup = `
-    <div class="movie-card">
-      <img
-        src="img/1613108527_maxresdefault-51.jpg"
-        alt=""
-        class="movie-image"
-      />
-      <div class="description">
-        <p class="film-name">${film.title}</p>
-        <p class="genre">action</p>
-        <small class="release-year">${film.release_date.slice(0, 4)}</small>
-        </div>
-        </div>`;
-
-    moviesContainer.insertAdjacentHTML('beforeend', markup);
-  });
-};
-
-// searchFunctional();
-
-searchForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  searchFunctional();
+const search = (event) => {
+  event.preventDefault();
+  const inputVal = searchInput.value;
+  searchQuery = searchInput.value;
+  getGenres(true, inputVal);
+  curPage = 1;
   searchInput.value = '';
   searchInput.blur();
-});
+};
 
-// genres.find((genre) => genre.id === film.genre_ids[0]).name
-*/
+// searchForm.addEventListener('submit', (e) => {
+//   e.preventDefault();
+//   const inputVal = searchInput.value;
+//   searchQuery = searchInput.value;
+//   getGenres(true, inputVal);
+//   curPage = 1;
+//   searchInput.value = '';
+//   searchInput.blur();
+// });
+
+const filter = (event) => {
+  const allFilterInputsArr = [...allFilterInputs];
+  const filteredArr = allFilterInputsArr.filter(
+    (input) => input !== event.target
+  );
+
+  if (!event.target.checked && filteredArr.some((inp) => inp.checked)) {
+    const checkedFilterArr = filteredArr.filter((inp) => inp.checked);
+    moviesContainer.innerHTML = '';
+    if (checkedFilterArr.length > 1) {
+      checkedFilterArr.forEach((filt) => {
+        multipleFilters = true;
+        filterVar = filt.getAttribute('data-genre-name');
+        getGenres(false, '', true, filterVar);
+      });
+    } else if (checkedFilterArr.length === 1) {
+      multipleFilters = false;
+      filterVar = checkedFilterArr[0].getAttribute('data-genre-name');
+      getGenres(false, '', true, filterVar);
+    }
+    return;
+  }
+
+  if (
+    event.target.hasAttribute('data-genre-name') &&
+    filteredArr.some((inp) => inp.checked)
+  ) {
+    multipleFilters = true;
+    filterVar = event.target.getAttribute('data-genre-name');
+    getGenres(false, '', true, filterVar);
+    clickedCheckbox = event.target;
+    return;
+  }
+
+  if (event.target.hasAttribute('data-genre-name')) {
+    moviesContainer.innerHTML = '';
+    filterVar = event.target.getAttribute('data-genre-name');
+    getGenres(false, '', true, filterVar);
+    clickedCheckbox = event.target;
+  }
+};
