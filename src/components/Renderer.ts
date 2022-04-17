@@ -1,21 +1,21 @@
 import { Genre } from '../models/genres.interfarce';
-import { Movie, MoviesType } from '../models/movies.interface';
+import { MovieInterface, MoviesType } from '../models/movies.interface';
 
 class Renderer {
-	constructor(
-		public movieWrapper: HTMLDivElement,
-		public detailsContainer: HTMLDivElement,
-		public filterGenreBody: HTMLDivElement,
-		public selectMoviesTypeContainer: HTMLSelectElement,
-		public onMovieClick: (event: PointerEvent) => void,
-		public onChooseGenre: (event: PointerEvent) => void
-	) {}
+  constructor(
+    public movieWrapper: HTMLDivElement,
+    public detailsContainer: HTMLDivElement,
+    public filterGenreBody: HTMLDivElement,
+    public selectMoviesTypeContainer: HTMLSelectElement,
+    public onMovieClick: (event: PointerEvent) => void,
+    public onChooseGenre: (event: PointerEvent) => void
+  ) {}
 
-	public renderMovie(movies: Movie[]): void {
-		this.movieWrapper.innerHTML = '';
+  public renderMovie(movies: MovieInterface[]): void {
+    this.movieWrapper.innerHTML = '';
 
-		movies.forEach((movie: Movie) => {
-			this.movieWrapper.innerHTML += `<div data-movie-id="${movie.movieId}" class="movie-card">
+    movies.forEach((movie: MovieInterface) => {
+      this.movieWrapper.innerHTML += `<div data-movie-id="${movie.movieId}" class="movie-card">
         <img src="${movie.image}" class="movie-logo-img" />
         <div class="movie-details-info">
             <p class="movie-title">${movie.title}</p>
@@ -23,17 +23,17 @@ class Renderer {
             <p class="movie-genre">${movie.genre}</p>
         </div>
       </div>`;
-		});
+    });
 
-		document.querySelectorAll('.movie-card').forEach((mc: HTMLDivElement) => {
-			mc.addEventListener('click', this.onMovieClick, false);
-		});
-	}
+    document.querySelectorAll('.movie-card').forEach((mc: HTMLDivElement) => {
+      mc.addEventListener('click', this.onMovieClick, false);
+    });
+  }
 
-	public renderDetailsPage(movieById: Movie): void {
-		this.detailsContainer.innerHTML = '';
+  public renderDetailsPage(movieById: MovieInterface): void {
+    this.detailsContainer.innerHTML = '';
 
-		this.detailsContainer.innerHTML += `	<div class="movie-vote-average-container">
+    this.detailsContainer.innerHTML += `	<div class="movie-vote-average-container">
       <img
         class="movie-img"
         src="${movieById.image}"
@@ -53,7 +53,7 @@ class Renderer {
         <p class="detail-info-sign">${movieById.year}</p>
       </div>
       <div>
-        <p class="movie-details-sign">Genre:</p>
+        <p class="movie-details-sign">Genre:</p> 
         <p class="detail-info-sign">${movieById.genre}</p>
       </div>
       <div>
@@ -61,30 +61,30 @@ class Renderer {
         <p class="detail-overview">${movieById.overview}</p>
       </div>
     </div>`;
-	}
+  }
 
-	public renderGenres(genres: Genre[]): void {
-		genres.forEach((genre: Genre) => {
-			this.filterGenreBody.innerHTML += `<div class="body-filter-body">	
+  public renderGenres(genres: Genre[]): void {
+    genres.forEach((genre: Genre) => {
+      this.filterGenreBody.innerHTML += `<div class="body-filter-body">	
       <input type="checkbox" data-genre-id="${genre.id}" class="filtered-checkboxes" />
       <p class="body-filter-movie-type">${genre.name}</p>
     </div>`;
-		});
+    });
 
-		document
-			.querySelectorAll('.filtered-checkboxes')
-			.forEach((fc: HTMLInputElement) => {
-				fc.addEventListener('click', this.onChooseGenre, false);
-			});
-	}
+    document
+      .querySelectorAll('.filtered-checkboxes')
+      .forEach((fc: HTMLInputElement) => {
+        fc.addEventListener('click', this.onChooseGenre, false);
+      });
+  }
 
-	public renderMoviesTypes(moviesType: MoviesType[]): void {
-		moviesType.forEach((movieType: MoviesType) => {
-			this.selectMoviesTypeContainer.innerHTML += `<option class="filter-optoin" value="${movieType.value}">
+  public renderMoviesTypes(moviesType: MoviesType[]): void {
+    moviesType.forEach((movieType: MoviesType) => {
+      this.selectMoviesTypeContainer.innerHTML += `<option class="filter-optoin" value="${movieType.value}">
       ${movieType.title}
     </option>`;
-		});
-	}
+    });
+  }
 }
 
 export default Renderer;
